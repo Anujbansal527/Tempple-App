@@ -2,15 +2,11 @@
   "version": 2,
   "builds": [
     {
-      "src": "api/upload.js",
-      "use": "@vercel/node"
+      "src":"./index.js","use":"@vercel/node"
     }
   ],
   "routes": [
-    {
-      "src": "/api/upload",
-      "dest": "/api/upload.js"
-    }
+    {"src":"/(.*)","dest":"/"}
   ],
   "buildCommand": "npm run build:production"
 }
