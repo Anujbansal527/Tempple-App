@@ -1,5 +1,4 @@
 const cloudinary = require('cloudinary').v2;
-const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
 // Configure Cloudinary
 cloudinary.config({
@@ -8,21 +7,10 @@ cloudinary.config({
   api_secret: process.env.CLOUD_SECRET,
 }); 
 
-// Set up multer storage
-const storage = new CloudinaryStorage({
-  cloudinary: cloudinary,
-  params: {
-    folder: 'deity_images', // Folder name in Cloudinary for Deity images
-    allowed_formats: ['jpg', 'png', 'jpeg'],
-  },
-});
-
-const upload = multer({ storage: storage });
-
 // Function to upload image and return URL
 const uploadImage = async (file) => {
   try {
-    const result = await cloudinary.uploader.upload(file);
+    const result = await cloudinary.uploader.upload(file.path);
     console.log(result)
     return result.secure_url; // Return the secure URL of the uploaded image
   } catch (error) {
@@ -30,4 +18,4 @@ const uploadImage = async (file) => {
   }
 };
 
-module.exports = { upload, uploadImage }; // Export the upload function and uploadImage
+module.exports = { uploadImage }; // Export the uploadImage function
