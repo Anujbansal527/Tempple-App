@@ -1,5 +1,4 @@
 const cloudinary = require('cloudinary').v2;
-const multer = require('multer');
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
 // Configure Cloudinary
@@ -7,7 +6,7 @@ cloudinary.config({
   cloud_name: process.env.CLOUD_NAME,
   api_key: process.env.CLOUD_KEY,
   api_secret: process.env.CLOUD_SECRET,
-});
+}); 
 
 // Set up multer storage
 const storage = new CloudinaryStorage({
@@ -21,9 +20,9 @@ const storage = new CloudinaryStorage({
 const upload = multer({ storage: storage });
 
 // Function to upload image and return URL
-const uploadImage = async (filePath) => {
+const uploadImage = async (file) => {
   try {
-    const result = await cloudinary.uploader.upload(filePath);
+    const result = await cloudinary.uploader.upload(file);
     console.log(result)
     return result.secure_url; // Return the secure URL of the uploaded image
   } catch (error) {
