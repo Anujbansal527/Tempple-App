@@ -190,125 +190,6 @@ const login = async (req, res) => {
   res.status(200).json({ message: "Login successful", token });
 };
 
-const updateProfile = async (req, res) => {
-  const userId = req.user._id;
-  const { personalInfo, userType, bankDetails, aadhaarCard, panCard, workDetails } = req.body;
-
-  if (userType) {
-    return res.status(400).json({ error: "Cannot update user role" });
-  }
-
-  try {
-    const updateData = {};
-
-    if (personalInfo) {
-      const {
-        fullName,
-        surname,
-        dob,
-        gender,
-        mobileNumber,
-        email,
-        profilePic,
-        address,
-        cityTownVillage,
-        state,
-        district,
-        postalCode,
-      } = personalInfo;
-
-      if (fullName) {
-        updateData["personalInfo.fullName"] = fullName;
-      }
-      if (surname) {
-        updateData["personalInfo.surname"] = surname;
-      }
-      if (dob) {
-        updateData["personalInfo.dob"] = dob;
-      }
-      if (gender) {
-        updateData["personalInfo.gender"] = gender;
-      }
-      if (mobileNumber) {
-        updateData["personalInfo.mobileNumber"] = mobileNumber;
-      }
-      if (email) {
-        updateData["personalInfo.email"] = email;
-      }
-      if (profilePic) {
-        const imageFile = req.image; // Access the processed image from middleware
-        const imageUrl = await uploadImageToS3(imageFile); // Upload image to S3
-        updateData["personalInfo.profilePic"] = imageUrl; // Update profilePic with imageUrl
-      }
-      if (address) {
-        updateData["personalInfo.address"] = address;
-      }
-      if (cityTownVillage) {
-        updateData["personalInfo.cityTownVillage"] = cityTownVillage;
-      }
-      if (state) {
-        updateData["personalInfo.state"] = state;
-      }
-      if (district) {
-        updateData["personalInfo.district"] = district;
-      }
-      if (postalCode) {
-        updateData["personalInfo.postalCode"] = postalCode;
-      }
-    }
-
-    if (bankDetails) {
-      const { ifscCode, bankName, accountNumber, upiId } = bankDetails;
-      if (ifscCode) {
-        updateData["bankDetails.ifscCode"] = ifscCode;
-      }
-      if (bankName) {
-        updateData["bankDetails.bankName"] = bankName;
-      }
-      if (accountNumber) {
-        updateData["bankDetails.accountNumber"] = accountNumber;
-      }
-      if (upiId) {
-        updateData["bankDetails.upiId"] = upiId;
-      }
-    }
-
-    if (aadhaarCard) {
-      const aadhaarImageFile = req.aadhaarCard; // Access the processed image from middleware
-      const aadhaarImageUrl = await uploadImageToS3(aadhaarImageFile); // Upload image to S3
-      updateData["identification.aadhaar"] = aadhaarImageUrl; // Update aadhaar with imageUrl
-    }
-
-    if (panCard) {
-      const panImageFile = req.panCard; // Access the processed image from middleware
-      const panImageUrl = await uploadImageToS3(panImageFile); // Upload image to S3
-      updateData["identification.pan"] = panImageUrl; // Update pan with imageUrl
-    }
-
-    if (workDetails) {
-      updateData["workDetails"] = workDetails;
-    }
-
-    const updatedUser = await User.findByIdAndUpdate(
-      userId,
-      { $set: updateData },
-      { new: true, runValidators: true }
-    );
-
-    if (!updatedUser) {
-      return res.status(404).json({ error: "User not found" });
-    }
-
-    res
-      .status(200)
-      .json({ message: "Profile updated successfully", user: updatedUser });
-  } catch (error) {
-    res
-      .status(400)
-      .json({ error: "Failed to update profile", details: error.message });
-  }
-};
-
 const getUserProfile = async (req, res) => {
   try {
     const userId = req.user._id;
@@ -327,6 +208,111 @@ const getUserProfile = async (req, res) => {
         error: "Failed to retrieve user profile",
         details: error.message,
       });
+  }
+};
+const updateProfile = async (req, res) => {
+  const { 
+    personalInfo, 
+    workDetails, 
+    socialMedia, 
+    aboutYou, 
+    bankDetails, 
+    identification 
+  } = req.body;
+
+  const userId = req.user._id;
+
+  try {
+    const user = await User.findById(userId); // Fetch user to get role
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Update personalInfo if provided
+    if (personalInfo) {
+      if (personalInfo.fullName) user.personalInfo.fullName = personalInfo.fullName;
+      if (personalInfo.surname) user.personalInfo.surname = personalInfo.surname;
+      if (personalInfo.dob) user.personalInfo.dob = personalInfo.dob;
+      if (personalInfo.gender) user.personalInfo.gender = personalInfo.gender;
+      if (personalInfo.email) user.personalInfo.email = personalInfo.email;
+      if (personalInfo.address) user.personalInfo.address = personalInfo.address;
+      if (personalInfo.cityTownVillage) user.personalInfo.cityTownVillage = personalInfo.cityTownVillage;
+      if (personalInfo.state) user.personalInfo.state = personalInfo.state;
+      if (personalInfo.district) user.personalInfo.district = personalInfo.district;
+      if (personalInfo.postalCode) user.personalInfo.postalCode = personalInfo.postalCode;
+    }
+
+    // Update workDetails if provided and user is Pujari
+    if (user.userType === "Pujari" && workDetails) {
+      if (workDetails.employmentType) user.workDetails.employmentType = workDetails.employmentType;
+      if (workDetails.language) user.workDetails.language = workDetails.language;
+      if (workDetails.otherLanguages) user.workDetails.otherLanguages = workDetails.otherLanguages;
+      if (workDetails.pujariType) user.workDetails.pujariType = workDetails.pujariType;
+      if (workDetails.pujaExpertise) user.workDetails.pujaExpertise = workDetails.pujaExpertise;
+      if (workDetails.astrologyExpertise) user.workDetails.astrologyExpertise = workDetails.astrologyExpertise;
+      if (workDetails.pujariRegion) user.workDetails.pujariRegion = workDetails.pujariRegion;
+      if (workDetails.pujariCommunity) user.workDetails.pujariCommunity = workDetails.pujariCommunity;
+      if (workDetails.vedaEducation) user.workDetails.vedaEducation = workDetails.vedaEducation;
+      if (workDetails.education) user.workDetails.education = workDetails.education;
+      if (workDetails.workingAt) user.workDetails.workingAt = workDetails.workingAt;
+      if (workDetails.serviceType) user.workDetails.serviceType = workDetails.serviceType;
+      if (workDetails.willingToTravel) user.workDetails.willingToTravel = workDetails.willingToTravel;
+    }
+
+    // Update socialMedia if provided
+    if (socialMedia) {
+      if (socialMedia.facebook) user.socialMedia.facebook = socialMedia.facebook;
+      if (socialMedia.youtube) user.socialMedia.youtube = socialMedia.youtube;
+      if (socialMedia.instagram) user.socialMedia.instagram = socialMedia.instagram;
+    }
+
+    // Update aboutYou if provided
+    if (aboutYou) {
+      user.aboutYou = aboutYou;
+    }
+
+    // Update bankDetails if provided
+    if (bankDetails) {
+      if (bankDetails.ifscCode) user.bankDetails.ifscCode = bankDetails.ifscCode;
+      if (bankDetails.bankName) user.bankDetails.bankName = bankDetails.bankName;
+      if (bankDetails.accountNumber) user.bankDetails.accountNumber = bankDetails.accountNumber;
+      if (bankDetails.upiId) user.bankDetails.upiId = bankDetails.upiId;
+    }
+
+    // Update identification if provided
+    if (identification) {
+      if (typeof identification.aadhaar === 'string') {
+        user.identification.aadhaar = identification.aadhaar;
+      }
+      if (typeof identification.pan === 'string') {
+        user.identification.pan = identification.pan;
+      }
+    }
+
+    // Handle file uploads for profilePic, aadhaar, and pan
+    if (req.files) {
+      if (req.files.profilePic) {
+        const profilePicFile = req.files.profilePic;
+        const profilePicUrl = await uploadImageToS3(profilePicFile);
+        user.personalInfo.profilePic = profilePicUrl;
+      }
+      if (req.files.aadhaar && typeof identification.aadhaar !== 'string') {
+        const aadhaarFile = req.files.aadhaar;
+        const aadhaarUrl = await uploadImageToS3(aadhaarFile);
+        user.identification.aadhaar = aadhaarUrl;
+      }
+      if (req.files.pan && typeof identification.pan !== 'string') {
+        const panFile = req.files.pan;
+        const panUrl = await uploadImageToS3(panFile);
+        user.identification.pan = panUrl;
+      }
+    }
+
+    await user.save();
+    res.status(200).json({ message: "Profile updated successfully" });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to update profile", details: error.message });
   }
 };
 
