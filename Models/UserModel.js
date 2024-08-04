@@ -25,7 +25,6 @@ const UserSchema = new mongoose.Schema(
     referralCode: { type: String, unique: true },
     password: { type: String, required: true },
     workDetails: {
-      type: {
         employmentType: {
           type: String,
           enum: ["Independent", "Temple", "Astrologer"],
@@ -43,8 +42,9 @@ const UserSchema = new mongoose.Schema(
         serviceType: {
           type: String,
           enum: ["Online", "Offline", "Other", "Home"],
-        },
-        willingToTravel: { type: Boolean },
+        pujaTypes: [{ type: String }],
+        astrologyServiceTypes: [{ type: String }],
+        willingToTravel: { type: String },
       },
     },
     socialMedia: {
