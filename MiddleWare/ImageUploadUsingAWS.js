@@ -1,31 +1,40 @@
-require('dotenv').config();
 const AWS = require('aws-sdk');
 const multer = require('multer');
-const upload = multer({ storage: multer.memoryStorage() }); // Store files in memory
+require('dotenv').config();
+const crypto = require('crypto')
 
+const uploadS3 = multer();
+
+// Configure AWS S3
 const s3 = new AWS.S3({
     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-    region: process.env.AWS_REGION
+    region: process.env.AWS_REGION,
 });
 
-async function uploadImageToS3(file) {
-    const params = {
-        Bucket: process.env.S3_BUCKET_NAME, // Use the bucket name from .env
-        Key: `images/${file.originalname}`, // File name you want to save as in S3
-        Body: file.buffer, // The file data
-        ContentType: file.mimetype, // The MIME type of the file
-        ACL: 'public-read' // Make the file publicly readable
-    };
+const uploadImageToS3 = async (file) => {
+    console.log(file);
+    const result = await s3.upload({
+        Bucket: process.env.S3_BUCKET_NAME,
+        Key: file.originalname,
+        Body: file.buffer,
+        ACL: 'public-read',
+    }).promise();
+    return result.Location; // Return the URL of the uploaded image
+};
 
+// Middleware to convert image file to URL
+const imageUploadMiddleware = async (req, res, next) => {
     try {
-        const data = await s3.upload(params).promise();
-        return data.Location; // Return the URL of the uploaded image
+        const imageUrl = await uploadImageToS3(req.file); // Convert image to URL
+        req.imageUrl = imageUrl; // Attach the URL to the request object
+        next(); // Proceed to the next middleware/controller
     } catch (error) {
-        console.error('Error uploading image:', error);
-        throw new Error('Image upload failed');
+        res.status(500).send({ error }); // Handle errors
     }
-}
+};
 
-// Export the function for use in other modules
-module.exports = { uploadImageToS3 };
+module.exports = {
+    uploadImageToS3,
+    imageUploadMiddleware,
+};

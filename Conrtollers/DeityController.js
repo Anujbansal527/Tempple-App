@@ -1,11 +1,12 @@
+const { uploadImageToS3 } = require("../MiddleWare/ImageUploadUsingAWS");
 const Deity = require("../Models/DeityModel");
-const { uploadImageToS3 } = require("../MiddleWare/ImageUploadUsingAWS"); // Import the function
-
+ 
 const createDeity = async (req, res) => {
   const { deityName, deityType, alternateName, description } = req.body; // Access other fields from req.body
-  const imageFile = req.file; // Access the uploaded file directly from req.file
+  const imageFile = req.image; // Access the processed image from middleware
+  const imageUrl = await uploadImageToS3(imageFile); // Upload image to S3
 
-  if (!imageFile) {
+  if (!imageUrl) {
     return res.status(400).json({ message: "Image file is required" }); // Handle missing image file
   }
   
@@ -15,7 +16,6 @@ const createDeity = async (req, res) => {
   }
   
   try {
-    const imageUrl = await uploadImageToS3(imageFile); // Upload image and get URL
     const deity = new Deity({
       deityName,
       image: imageUrl, // Use uploaded image URL
@@ -27,7 +27,7 @@ const createDeity = async (req, res) => {
     const savedDeity = await deity.save();
     res.status(201).json(savedDeity);
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    res.status(400).json( error);
   }
 };
 
@@ -54,16 +54,13 @@ const getDeityById = async (req, res) => {
 const updateDeity = async (req, res) => {
   const { id } = req.params;
   const { deityName, deityType, alternateName, description } = req.body; // Access other fields from req.body
-  const imageFile = req.file; // Access the uploaded file directly from req.file
+  const imageFile = req.image; // Access the processed image from middleware
+  const imageUrl = await uploadImageToS3(imageFile); // Upload image to S3
 
-  if (imageFile && !imageFile.originalname) {
+  if (imageUrl && !imageUrl.originalname) {
     return res.status(400).json({ message: "Invalid image file" }); // Handle invalid image file
   }
   try {
-    let imageUrl;
-    if (imageFile) {
-      imageUrl = await uploadImageToS3(imageFile); // Upload image and get URL
-    }
     const updatedDeity = await Deity.findByIdAndUpdate(
       id,
       {

@@ -5,7 +5,7 @@ const createNewPuja = async (req, res) => {
   if (!req.user || !req.user._id) {
     return res.status(401).json({ message: "User ID not found" });
   }
-
+ 
   
   const userId = req.user._id;
   
@@ -29,13 +29,11 @@ const createNewPuja = async (req, res) => {
     pujaVidhanam,
   } = req.body;
   try {
-    let pujaImage = "default"; // Default image
-    if (req.file) {
-      pujaImage = await uploadImage(req.file.path); // Upload to Cloudinary
-    }
+    const imageFile = req.image; // Access the processed image from middleware
+    const imageUrl = await uploadImageToS3(imageFile); // Upload image to S3
     const puja = new Puja({
       pujaName,
-      image: pujaImage,
+      image: imageUrl,
       godnames, 
       godType,
       categories,
@@ -105,15 +103,13 @@ const updatingPuja = async (req, res) => {
     status,
   } = req.body;
   try {
-    let updatedImage = "default"; // Default image
-    if (req.file) {
-      updatedImage = await uploadImage(req.file.path); // Upload to Cloudinary
-    }
+    const imageFile = req.image; // Access the processed image from middleware
+    const imageUrl = await uploadImageToS3(imageFile); // Upload image to S3
     const updatedPuja = await Puja.findByIdAndUpdate(
       id,
       {
         pujaName,
-        image: updatedImage, // Update image if provided
+        image: imageUrl, // Update image if provided
         godnames, 
         godType,
         categories,

@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
- 
+  
 const User = require("../Models/UserModel");
 const Otp = require("../Models/OtpModel");
 const Subscription = require("../Models/SubscriptionModel");
@@ -235,7 +235,9 @@ const updateProfile = async (req, res) => {
         updateData["personalInfo.email"] = email;
       }
       if (profilePic) {
-        updateData["personalInfo.profilePic"] = "image"; 
+        const imageFile = req.image; // Access the processed image from middleware
+        const imageUrl = await uploadImageToS3(imageFile); // Upload image to S3
+        updateData["personalInfo.profilePic"] = imageUrl; // Update profilePic with imageUrl
       }
       if (address) {
         updateData["personalInfo.address"] = address;
