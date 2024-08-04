@@ -75,7 +75,7 @@ const verifyOTP = async (req, res) => {
 };
 
 const register = async (req, res) => {
-  const { personalInfo, userType, referral, password } = req.body;
+  const { personalInfo, userType, referral, password, workDetails } = req.body;
   const { fullName, surname, dob, gender, mobileNumber } = personalInfo;
 
   if (!fullName || !surname || !dob || !gender) {
@@ -115,6 +115,7 @@ const register = async (req, res) => {
     referral: referral || null, 
     referralCode,
     password: encryptedPassword,
+    workDetails: userType === "Pujari" ? workDetails : null,
   });
 
   const token = createToken(newUser._id);
@@ -191,7 +192,7 @@ const login = async (req, res) => {
 
 const updateProfile = async (req, res) => {
   const userId = req.user._id;
-  const { personalInfo, userType } = req.body;
+  const { personalInfo, userType, bankDetails, aadhaarCard, panCard, workDetails } = req.body;
 
   if (userType) {
     return res.status(400).json({ error: "Cannot update user role" });
@@ -254,6 +255,38 @@ const updateProfile = async (req, res) => {
       if (postalCode) {
         updateData["personalInfo.postalCode"] = postalCode;
       }
+    }
+
+    if (bankDetails) {
+      const { ifscCode, bankName, accountNumber, upiId } = bankDetails;
+      if (ifscCode) {
+        updateData["bankDetails.ifscCode"] = ifscCode;
+      }
+      if (bankName) {
+        updateData["bankDetails.bankName"] = bankName;
+      }
+      if (accountNumber) {
+        updateData["bankDetails.accountNumber"] = accountNumber;
+      }
+      if (upiId) {
+        updateData["bankDetails.upiId"] = upiId;
+      }
+    }
+
+    if (aadhaarCard) {
+      const aadhaarImageFile = req.aadhaarCard; // Access the processed image from middleware
+      const aadhaarImageUrl = await uploadImageToS3(aadhaarImageFile); // Upload image to S3
+      updateData["identification.aadhaar"] = aadhaarImageUrl; // Update aadhaar with imageUrl
+    }
+
+    if (panCard) {
+      const panImageFile = req.panCard; // Access the processed image from middleware
+      const panImageUrl = await uploadImageToS3(panImageFile); // Upload image to S3
+      updateData["identification.pan"] = panImageUrl; // Update pan with imageUrl
+    }
+
+    if (workDetails) {
+      updateData["workDetails"] = workDetails;
     }
 
     const updatedUser = await User.findByIdAndUpdate(
