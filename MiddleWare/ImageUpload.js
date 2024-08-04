@@ -11,7 +11,7 @@ cloudinary.config({
 const uploadImage = async (file) => {
   try {
     const result = await cloudinary.uploader.upload(file.path);
-    console.log(result)
+    console.log(result.secure_url)
     return result.secure_url; // Return the secure URL of the uploaded image
   } catch (error) {
     throw new Error("Image upload failed: " + error.message);
