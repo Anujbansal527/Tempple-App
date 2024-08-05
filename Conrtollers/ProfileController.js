@@ -40,7 +40,7 @@ const requestOTP = async (req, res) => {
     await otpDoc.save();
   }
 
-  res.status(200).json({ message: "OTP sent successfully" });
+  res.status(200).json({ message: "OTP sent successfully",otp });
 };
 
 const verifyOTP = async (req, res) => {
@@ -71,7 +71,7 @@ const verifyOTP = async (req, res) => {
 
   await otpDoc.save();
 
-  res.status(200).json({ message: "OTP verified successfully" });
+  res.status(200).json({ message: "OTP verified successfully"});
 };
 
 const register = async (req, res) => {
