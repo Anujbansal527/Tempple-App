@@ -1,5 +1,6 @@
+const { uploadImageToS3 } = require("../MiddleWare/ImageUploadUsingAWS");
 const Puja = require("../Models/PujaModel");
-const { uploadImage } = require("../MiddleWare/ImageUpload")
+
 
 const createNewPuja = async (req, res) => {
   if (!req.user || !req.user._id) {
@@ -31,12 +32,9 @@ const createNewPuja = async (req, res) => {
   try {
     const imageFile = req.image; // Access the processed image from middleware
     const imageUrl = await uploadImageToS3(imageFile); // Upload image to S3
-    if (!imageUrl) {
-    return res.status(400).json({ message: "Image file is required" }); // Handle missing image file
-  }
     const puja = new Puja({
       pujaName,
-      image: imageUrl ? imageUrl : "no image",
+      image: imageUrl? imageUrl:"no",
       godnames, 
       godType,
       categories,
@@ -56,7 +54,7 @@ const createNewPuja = async (req, res) => {
     const savedPuja = await puja.save();
     res.status(201).json(savedPuja);
   } catch (error) {
-    res.status(400).json(error);
+    res.status(400).json({ message: error.message });
   }
 };
 
@@ -112,7 +110,7 @@ const updatingPuja = async (req, res) => {
       id,
       {
         pujaName,
-        image: imageUrl, // Update image if provided
+        image: imageUrl? imageUrl:"no", // Update image if provided
         godnames, 
         godType,
         categories,
