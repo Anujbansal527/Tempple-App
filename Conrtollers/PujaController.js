@@ -56,7 +56,7 @@ const createNewPuja = async (req, res) => {
     const savedPuja = await puja.save();
     res.status(201).json(savedPuja);
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    res.status(400).json(error);
   }
 };
 
