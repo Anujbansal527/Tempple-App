@@ -31,9 +31,12 @@ const createNewPuja = async (req, res) => {
   try {
     const imageFile = req.image; // Access the processed image from middleware
     const imageUrl = await uploadImageToS3(imageFile); // Upload image to S3
+    if (!imageUrl) {
+    return res.status(400).json({ message: "Image file is required" }); // Handle missing image file
+  }
     const puja = new Puja({
       pujaName,
-      image: imageUrl,
+      image: imageUrl ? imageUrl : "no image",
       godnames, 
       godType,
       categories,
